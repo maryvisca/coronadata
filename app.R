@@ -5,13 +5,13 @@ library(tidyr)
 library(purrr)
 library(ggplot2)
 
-#read in csv files
+#read in required csv files
 general <- read.csv("coronadata_general.csv", sep = ";")
 age_sex <- read.csv("coronadata_age_sex.csv", sep = ";")
 log_data <- read.csv("log_data.csv", sep = ";")
 deaths <- read.csv("deaths_demo.csv", sep = ";")
 
-#user interface dialogue
+#Build user interface 
 ui <- fluidPage(
   navbarPage("Monroe County COVID-19 Progress",
              tabPanel("Charts",
