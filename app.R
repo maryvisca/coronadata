@@ -115,7 +115,7 @@ server <- function(input, output) {
   summary_line <- summary_line %>%
     add_trace(y=~daily_tests, name = "Daily Tests Completed (Left)", line = list(color = 'rgb(205, 12, 24)'))
   summary_line <- summary_line %>%
-    add_trace(y=~percent_pos, name = "Positivity Rate (Right)", line = list(color = 'rgb(205, 12, 24)', dash = 'dash'), yaxis = "y2")
+    add_trace(y=~percent_pos, name = "Cumulative Positivity Rate (Right)", line = list(color = 'rgb(205, 12, 24)', dash = 'dash'), yaxis = "y2")
   summary_line <- summary_line %>%
     add_trace(y=~death_rate, name = "Cumulative CFR (Right)", line = list(color = 'rgb(22, 96, 167)', dash = 'dash'), yaxis = "y2")
   summary_line <- summary_line %>%
