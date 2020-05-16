@@ -13,7 +13,7 @@ deaths <- read.csv("deaths_demo.csv", sep = ";")
 
 #Build user interface 
 ui <- fluidPage(
-  navbarPage("Monroe County COVID-19 Progress",
+  navbarPage("Monroe County COVID-19 Tracker",
              tabPanel("Charts",
               sidebarPanel(
                selectInput("select", label = "Choose a plot to display", 
