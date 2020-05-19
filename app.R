@@ -4,12 +4,13 @@ library(plotly)
 library(tidyr)
 library(purrr)
 library(ggplot2)
+library(xlsx)
 
 #read in required csv files
-general <- read.csv("coronadata_general.csv", sep = ";")
-age_sex <- read.csv("coronadata_age_sex.csv", sep = ";")
-log_data <- read.csv("log_data.csv", sep = ";")
-deaths <- read.csv("deaths_demo.csv", sep = ";")
+general <- read.xlsx("coronadata_general.xlsx", 1, detectDates = TRUE)
+age_sex <- read.xlsx("coronadata_age_sex.xlsx", 1, detectDates = TRUE)
+log_data <- read.xlsx("log_data.xlsx", 1, detectDates = TRUE)
+deaths <- read.xlsx("deaths_demo.xlsx", 1, detectDates = TRUE)
 
 #Build user interface 
 ui <- fluidPage(
@@ -166,9 +167,13 @@ server <- function(input, output) {
   df <- general_app %>%
     map_df(rev)
   
+  #Change date type to character type to renderTable not correctly displaying dates
+  df$Date <- as.character(df$Date)
+  
   #render general data table
   output$table <- renderTable(df)
-  
+ 
+
   #change column names for readability again
   age_sex_app <- age_sex
   colnames(age_sex_app) <- c('Date', '0-19(M)', '0-19(F)', '20-29(M)', '20-29(F)', '30-39(M)', '30-39(F)', '40-49(M)', 
@@ -179,9 +184,13 @@ server <- function(input, output) {
   #reorder dataframe from most to least recent
   df2 <- age_sex_app %>%
     map_df(rev)
+
+  #Change date type to character type to renderTable not correctly displaying dates
+  df2$Date <- as.character(df2$Date)
   
   #render age and sex data table
   output$table2 <- renderTable(df2)
+
 }
 
 shinyApp(ui = ui, server = server)
