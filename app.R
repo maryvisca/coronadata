@@ -7,13 +7,19 @@ library(ggplot2)
 library(xlsx)
 
 #read in required csv files
-general <- read.xlsx("coronadata_general.xlsx", 1, detectDates = TRUE)
-age_sex <- read.xlsx("coronadata_age_sex.xlsx", 1, detectDates = TRUE)
-log_data <- read.xlsx("log_data.xlsx", 1, detectDates = TRUE)
-deaths <- read.xlsx("deaths_demo.xlsx", 1, detectDates = TRUE)
+general <- read.xlsx("coronadata_general.xlsx", 1)
+age_sex <- read.xlsx("coronadata_age_sex.xlsx", 1)
+log_data <- read.xlsx("log_data.xlsx", 1)
+deaths <- read.xlsx("deaths_demo.xlsx", 1)
 
 #Build user interface 
 ui <- fluidPage(
+  tags$head(
+    tags$style(
+      HTML("#shiny-notification-panel {width: 300px; top: calc(50%); right: calc(27%)}
+           ")
+    )
+  ),
   navbarPage("Monroe County COVID-19 Tracker",
              tabPanel("Charts",
               sidebarPanel(
@@ -126,7 +132,7 @@ server <- function(input, output) {
   
   #ANOTHER LINE CHART WITH DAILY GROWTH RATE OF POSITIVE CASES, DAILY GROWTH RATE OF DEATHS, DAILY GROWTH RATE OF ACTUAL INFECTIONS 
   #LAST 7 DAYS
-  growth_rates <- plot_ly(general, x=~date, y=~percent_increase, type = 'scatter', mode = 'lines', name = "Daily GR of Positive Cases", line = list(color = 'rgb(22, 96, 167)'))
+  growth_rates <- plot_ly(general, x=~date, y=~percent_increase., type = 'scatter', mode = 'lines', name = "Daily GR of Positive Cases", line = list(color = 'rgb(22, 96, 167)'))
   growth_rates <- growth_rates %>%
     add_trace(y=~death_growth_rate, line = list(color = 'rgb(205, 12, 24)'), name = "Daily GR of Deaths")
   growth_rates <- growth_rates %>%
@@ -150,9 +156,8 @@ server <- function(input, output) {
                    "Deaths by Age Group" = donut_d)
   })
   observeEvent(input$select, {
-    chart <- input$select
     if (input$select == "Deaths by Age Group") {
-      showNotification("Warning: This plot may not be up to date", type = "error", closeButton = FALSE, duration = NULL)
+      showNotification("Warning: This plot may not be up to date", type = "error", closeButton = TRUE, duration = 10)
     }
   })
   
