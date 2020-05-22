@@ -5,12 +5,15 @@ library(tidyr)
 library(purrr)
 library(ggplot2)
 library(xlsx)
+library(feedeR)
+library(DT)
 
 #read in required csv files
 general <- read.xlsx("coronadata_general.xlsx", 1)
 age_sex <- read.xlsx("coronadata_age_sex.xlsx", 1)
 log_data <- read.xlsx("log_data.xlsx", 1)
 deaths <- read.xlsx("deaths_demo.xlsx", 1)
+link <- read.xlsx("links.xlsx", 1)
 
 #Build user interface 
 ui <- fluidPage(
@@ -30,9 +33,15 @@ ui <- fluidPage(
                            selected = "Cumulative Cases")),
               mainPanel(plotlyOutput("plot"))),
              tabPanel("General Data",
-              mainPanel(tableOutput("table"))),
+              mainPanel(dataTableOutput("table"))),
              tabPanel("Age and Sex Data",
-              mainPanel(tableOutput("table2")))
+              mainPanel(dataTableOutput("table2"))),
+             tabPanel("Local Health Updates",
+              mainPanel(dataTableOutput("table3"))),
+             tabPanel("Local Policy Updates",
+              mainPanel(dataTableOutput("table4"))),
+             tabPanel("Sources and Links",
+              mainPanel(dataTableOutput("table5")))
             )
         )
 
@@ -132,7 +141,7 @@ server <- function(input, output) {
   
   #ANOTHER LINE CHART WITH DAILY GROWTH RATE OF POSITIVE CASES, DAILY GROWTH RATE OF DEATHS, DAILY GROWTH RATE OF ACTUAL INFECTIONS 
   #LAST 7 DAYS
-  growth_rates <- plot_ly(general, x=~date, y=~percent_increase., type = 'scatter', mode = 'lines', name = "Daily GR of Positive Cases", line = list(color = 'rgb(22, 96, 167)'))
+  growth_rates <- plot_ly(general, x=~date, y=~percent_increase, type = 'scatter', mode = 'lines', name = "Daily GR of Positive Cases", line = list(color = 'rgb(22, 96, 167)'))
   growth_rates <- growth_rates %>%
     add_trace(y=~death_growth_rate, line = list(color = 'rgb(205, 12, 24)'), name = "Daily GR of Deaths")
   growth_rates <- growth_rates %>%
@@ -176,7 +185,7 @@ server <- function(input, output) {
   df$Date <- as.character(df$Date)
   
   #render general data table
-  output$table <- renderTable(df)
+  output$table <- renderDataTable(df)
  
 
   #change column names for readability again
@@ -194,8 +203,67 @@ server <- function(input, output) {
   df2$Date <- as.character(df2$Date)
   
   #render age and sex data table
-  output$table2 <- renderTable(df2)
-
+  output$table2 <- renderDataTable(df2)
+  
+  #get RSS feed to populate local health updates tab
+  myquery <- feed.extract("https://www.urmc.rochester.edu/news/rss/feed.aspx?serviceline=93&topX=10&source=URMC,Highland,Noyes")
+  
+  #put RSS feed info into a data frame
+  updates <- data.frame(myquery$items)
+  
+  #select only the informative columns
+  updates <- updates %>%
+    select("title", "date", "link")
+  
+  #change those columns' names
+  colnames(updates) <- c('Title', 'Date', 'Link')
+  
+  
+  #get the dates into a normal format
+  updates$Date <- as.character(updates$Date)
+  
+  #make links hyperlinks
+  updates$Link <- paste0("<a href='", updates$Link, "' target = '_blank'>", updates$Link, "</a>")
+  
+  #render local health updates data table
+  output$table3 <- DT::renderDataTable({
+    DT::datatable(updates[, , drop = FALSE], escape = FALSE)
+  })
+  
+  #**************************#
+  #get RSS feed to populate local policy updates tab
+  myquery_p <- feed.extract("https://www.monroecounty.gov/topstory-news.rss")
+  
+  #put RSS feed info into a data frame
+  updates_p <- data.frame(myquery_p$items)
+  
+  #select only the informative columns
+  updates_p <- updates_p %>%
+    select("title", "date", "link")
+  
+  #change those columns' names
+  colnames(updates_p) <- c('Title', 'Date', 'Link')
+  
+  #get the dates into a normal format
+  updates_p$Date <- as.character(updates_p$Date)
+  
+  #make links hyperlinks
+  updates_p$Link <- paste0("<a href='", updates_p$Link, "' target = '_blank'>", updates_p$Link, "</a>")
+  
+  #render local updates data table
+  output$table4 <- DT::renderDataTable({
+    DT::datatable(updates_p[, , drop = FALSE], escape = FALSE)
+  })
+  
+  #****************************#
+  
+  #make the links hyperlinks
+  link$Link <- paste0("<a href='", link$Link, "' target = '_blank'>", link$Link, "</a>")
+  
+  #render data table
+  output$table5 <- DT::renderDataTable({
+    DT::datatable(link[, , drop = FALSE], escape = FALSE)
+  })
 }
 
 shinyApp(ui = ui, server = server)
