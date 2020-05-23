@@ -116,10 +116,10 @@ server <- function(input, output) {
     layout(title = "Confirmed Cases by Age and Sex")
   
   #DEATHS BY AGE
-  labels_d <- c('0-59', '60-69', '70-79', '80-89', '90-99')
-  last_d <- tail(deaths)
-  values_d <- as.numeric(last_d)
-  donut_d <- plot_ly(labels = labels_d, values = values_d)
+  labels_d <- c('0-17', '18-49', '50-64', '65-74', '75-84', '85+')
+  counts_d <- deaths$Deaths
+  values_d <- as.numeric(counts_d)
+  donut_d <- plot_ly(labels = labels_d, values = counts_d)
   donut_d <- donut_d %>%
     add_pie(hole = 0.4)
   donut_d <- donut_d %>%
@@ -164,11 +164,13 @@ server <- function(input, output) {
                    "Active Cases by Proportions" = csa_active,
                    "Deaths by Age Group" = donut_d)
   })
-  observeEvent(input$select, {
-    if (input$select == "Deaths by Age Group") {
-      showNotification("Warning: This plot may not be up to date", type = "error", closeButton = TRUE, duration = 10)
-    }
-  })
+  
+  # throw warning only if data is not up to date
+  # observeEvent(input$select, {
+  #   if (input$select == "Deaths by Age Group") {
+  #     showNotification("Warning: This plot may not be up to date", type = "error", closeButton = TRUE, duration = 10)
+  #   }
+  # })
   
   #Table Outputs
   #Change column names so they are more readable
