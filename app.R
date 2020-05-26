@@ -165,12 +165,12 @@ server <- function(input, output) {
                    "Deaths by Age Group" = donut_d)
   })
   
-  # throw warning only if data is not up to date
-  # observeEvent(input$select, {
-  #   if (input$select == "Deaths by Age Group") {
-  #     showNotification("Warning: This plot may not be up to date", type = "error", closeButton = TRUE, duration = 10)
-  #   }
-  # })
+  #throw warning only if data is not up to date
+  observeEvent(input$select, {
+    if (input$select == "Deaths by Age Group") {
+      showNotification("Warning: This plot may not be up to date", type = "error", closeButton = TRUE, duration = 10)
+    }
+  })
   
   #Table Outputs
   #Change column names so they are more readable
