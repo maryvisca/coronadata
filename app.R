@@ -68,7 +68,7 @@ server <- function(input, output) {
   hosp_icu <- hosp_icu %>%
     add_trace(y=~hosp, name = "Hospitalized", fillcolor="50CB86", line=list(color="50CB86"))
   hosp_icu <- hosp_icu %>%
-    layout(title = "COVID-19 Cases by Category", xaxis=list(title="Date"), yaxis=list(title="Counts"))
+    layout(title = "Daily Hospitalization and ICU Counts", xaxis=list(title="Date"), yaxis=list(title="Counts"))
   
   #STACKED BAR ACTIVE CASES
   df_sb <- tail(general, 15)
@@ -100,20 +100,29 @@ server <- function(input, output) {
   pie_s <- pie_s %>%
     layout(title = "Confirmed Cases by Sex")
   
-  #AGE DONUT CHART
-    #I WANT ALL PIE CHARTS TO BE LINKED TO ONE SELECTION ON MENU-FUTURE TASK
-  labels <- c('0-19(M)', '0-19(F)', '20-29(M)', '20-29(F)', '30-39(M)', '30-39(F)', '40-49(M)', 
-              '40-49(F)', '50-59(M)', '50-59(F)', '60-69(M)', '60-69(F)', '70-79(M)', '70-79(F)', '80-89(M)', 
-              '80-89(F)', '90-99(M)', '90-99(F)', '100+(M)', '100+(F)')
+  #AGE AND SEX PYRAMID CHART
+  age <- rep(c('0-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90-99', '100-'), times = 2)
+  sex <- rep(c('Male', 'Female'), each = 10)
+  tail <- tail(age_sex, 1)
+  last <- as.numeric(tail[2:21])
+  males <- last[seq(1,length(last),2)] * -1
+  females <- last[seq(2, length(last),2)]
+  pop <- c(males, females)
+  df_pyramid <- data.frame(age, sex, pop)
   
-  last <- tail(age_sex, 1)
+  df_pyramid <- df_pyramid %>%
+    mutate(abs_pop = abs(pop))
   
-  values <- as.numeric(last[2:21])
-  
-  donut <- plot_ly(labels = labels, values = values)
-  donut <- donut %>% add_pie(hole = 0.6)
-  donut <- donut %>%
-    layout(title = "Confirmed Cases by Age and Sex")
+  df_pyramid <- df_pyramid %>% 
+    plot_ly(x= ~pop, y=~age,color=~sex) %>% 
+    add_bars(orientation = 'h', hoverinfo = 'text', text = ~abs_pop) %>%
+    layout(yaxis = list(title = "Age Group"), 
+           bargap = 0.1, barmode = 'overlay',
+           xaxis = list(
+                      tickmode = 'array', 
+                      tickvals = list(-200, -100, 0, 100, 200, 300),
+                      ticktext = list('200', '100', '0', '100', '200', '300'), 
+                      title = "Population"))
   
   #DEATHS BY AGE
   labels_d <- c('0-17', '18-49', '50-64', '65-74', '75-84', '85+')
@@ -135,7 +144,9 @@ server <- function(input, output) {
   summary_line <- summary_line %>%
     add_trace(y=~death_rate, name = "Cumulative CFR (Right)", line = list(color = 'rgb(22, 96, 167)', dash = 'dash'), yaxis = "y2")
   summary_line <- summary_line %>%
-    add_trace(y=~daily_PR, name = "Daily Positivity Rate (Right)", line = list(color = 'rgb(12, 200, 90)'), yaxis = "y2")
+    add_trace(y=~daily_PR, name = "Daily Positivity Rate (Right)", line = list(color = 'rgb(12, 200, 90)', dash = 'dash'), yaxis = "y2")
+  summary_line <- summary_line %>%
+    add_trace(y=~average_TR_3, name = "3-Day Average of Daily Tests (Left)", line = list(color = 'rgb(255,140,0)'))
   summary_line <- summary_line %>%
     layout(title = 'Monroe County Summary Stats', yaxis = list(title = "Count"), yaxis2 = list(overlaying = "y", side = "right", title = "Percentage"))
   
@@ -158,7 +169,7 @@ server <- function(input, output) {
                    "Hospitalizations and ICU" = hosp_icu,
                    "Summary Stats" = summary_line, 
                    "M vs. F Pie Chart" = pie_s,
-                   "Age and Sex Breakdown" = donut, 
+                   "Age and Sex Breakdown" = df_pyramid, 
                    "Growth Rates" = growth_rates,
                    "Bar Chart of Active Cases" = sb,
                    "Active Cases by Proportions" = csa_active,
@@ -175,7 +186,7 @@ server <- function(input, output) {
   #Table Outputs
   #Change column names so they are more readable
   general_app <- general
-  colnames(general_app) <- c("Date", "Total Confirmed Cases", "New Cases", "% Inc Confirmed Cases", "Total Tests Run", "Daily Tests Run",
+  colnames(general_app) <- c("Date", "Total Confirmed Cases", "New Cases", "% Inc Confirmed Cases", "Total Tests Run", "Daily Tests Run", "3-Day Average of Daily Tests",
                              "% Inc Total Tests Run", "Total Positive Cases", "Cummulative Positivity Rate", "Daily Pos. Rate", "Current Hospitalized",
                              "Total Deaths", "CFR", "% Inc in Deaths", "Currently in ICU", "% Hosp. in ICU", "Active Cases", "Unhosp. Active Cases",
                              "% of Active Cases Hosp.", "% of Active Cases in ICU", "Active Cases Hosp. (Not in ICU)")
