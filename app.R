@@ -116,7 +116,7 @@ server <- function(input, output) {
   df_pyramid <- df_pyramid %>% 
     plot_ly(x= ~pop, y=~age,color=~sex) %>% 
     add_bars(orientation = 'h', hoverinfo = 'text', text = ~abs_pop) %>%
-    layout(yaxis = list(title = "Age Group"), 
+    layout(title = "Confirmed Cases Grouped by Age Group, Separated by Gender", yaxis = list(title = "Age Group"), 
            bargap = 0.1, barmode = 'overlay',
            xaxis = list(
                       tickmode = 'array', 
