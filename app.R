@@ -29,7 +29,7 @@ ui <- fluidPage(
                selectInput("select", label = "Choose a plot to display", 
                            choices = list("Death and Total Cases", "Cumulative Cases Semi Log", "Hospitalizations and ICU", "Summary Stats", 
                                           "M vs. F Pie Chart", "Age and Sex Breakdown", "Growth Rates", "Bar Chart of Active Cases", 
-                                          "Active Cases by Proportions", "Deaths by Age Group"), 
+                                          "Active Cases by Proportions", "Age Group Breakdown"), 
                            selected = "Cumulative Cases")),
               mainPanel(plotlyOutput("plot"))),
              tabPanel("General Data",
@@ -124,15 +124,26 @@ server <- function(input, output) {
                       ticktext = list('200', '100', '0', '100', '200', '300'), 
                       title = "Population"))
   
-  #DEATHS BY AGE
+  #Age Breakdown
   labels_d <- c('0-17', '18-49', '50-64', '65-74', '75-84', '85+')
-  counts_d <- deaths$Deaths
-  values_d <- as.numeric(counts_d)
-  donut_d <- plot_ly(labels = labels_d, values = counts_d)
-  donut_d <- donut_d %>%
-    add_pie(hole = 0.4)
-  donut_d <- donut_d %>%
-    layout(title = "Deaths by Age Group")
+  values_d <- as.numeric(deaths$Deaths)
+  values_h <- as.numeric(deaths$Hospitalized)
+  values_ICU <- as.numeric(deaths$ICU.Admissions)
+  values_cases <- as.numeric(deaths$Cases)
+  donut <- plot_ly(data = deaths)
+  donut <- donut %>%
+    add_pie(labels = ~labels_d, values = ~values_d, name = "Deaths", domain = list(row = 0, column = 0))
+  donut <- donut %>%
+    add_pie(labels = ~labels_d, values = ~values_h, name = "Hospitalized", domain = list(row = 0, column = 1))
+  donut <- donut %>%
+    add_pie(labels = ~labels_d, values = ~values_ICU, name = "ICU Adm", domain = list(row = 1, column = 0))
+  donut <- donut %>%
+    add_pie(labels = ~labels_d, values = ~values_cases, name = "Conf Cases", domain = list(row = 1, column = 1))
+  donut <- donut %>% layout(title = "Age Group Breakdown", showlegend = TRUE,
+                        grid=list(rows=2, columns=2),
+                        xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                        yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+
   
   
   #ANOTHER LINE CHART WITH DAILY TESTS COMPLETED, NEW POSITIVES, POSITIVE RATE, CUMULATIVE CFR (DOUBLE Y AXIS PERCENT ON RIGHT SIDE COUNT ON OTHER)
@@ -173,12 +184,12 @@ server <- function(input, output) {
                    "Growth Rates" = growth_rates,
                    "Bar Chart of Active Cases" = sb,
                    "Active Cases by Proportions" = csa_active,
-                   "Deaths by Age Group" = donut_d)
+                   "Age Group Breakdown" = donut)
   })
   
   #throw warning only if data is not up to date
   observeEvent(input$select, {
-    if (input$select == "Deaths by Age Group") {
+    if (input$select == "Age Group Breakdown") {
       showNotification("Warning: This plot may not be up to date", type = "error", closeButton = TRUE, duration = 10)
     }
   })
