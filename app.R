@@ -14,6 +14,9 @@ age_sex <- read.xlsx("coronadata_age_sex.xlsx", 1)
 log_data <- read.xlsx("log_data.xlsx", 1)
 deaths <- read.xlsx("deaths_demo.xlsx", 1)
 link <- read.xlsx("links.xlsx", 1)
+genders <- read.xlsx("coronadata_age_sex.xlsx", 2)
+ethnicity <- read.xlsx("deaths_demo.xlsx", 2)
+props_e <- read.xlsx("deaths_demo.xlsx", 3)
 
 #Build user interface 
 ui <- fluidPage(
@@ -28,8 +31,8 @@ ui <- fluidPage(
               sidebarPanel(
                selectInput("select", label = "Choose a plot to display", 
                            choices = list("Death and Total Cases", "Cumulative Cases Semi Log", "Hospitalizations and ICU", "Summary Stats", 
-                                          "M vs. F Pie Chart", "Age and Sex Breakdown", "Growth Rates", "Bar Chart of Active Cases", 
-                                          "Active Cases by Proportions", "Age Group Breakdown"), 
+                                          "Gender Breakdown", "Age and Sex Breakdown", "Growth Rates", "Bar Chart of Active Cases", 
+                                          "Active Cases by Proportions", "Age Group Breakdown", "Race/Ethnicity Breakdown"), 
                            selected = "Cumulative Cases")),
               mainPanel(plotlyOutput("plot"))),
              tabPanel("General Data",
@@ -91,14 +94,29 @@ server <- function(input, output) {
     layout(title = "Active Cases by Proportion", xaxis = list(title = "Date"), yaxis = list(title = "Percentage"))
   
   #SEX PIE CHART
-  
+  #Gender Breakdown
   males <- max(age_sex['M'])
   females <- max(age_sex['F'])
-  labels = c('Male', "Female")
-  values = c(males, females)
-  pie_s <- plot_ly(type = 'pie', labels = labels, values = values, textinfo = 'label+percent', insidetextorientation='radial', showlegend = FALSE)
-  pie_s <- pie_s %>%
-    layout(title = "Confirmed Cases by Sex")
+  labels <- c('Male', "Female")
+  values <-  c(males, females)
+  gb_values_h <- as.numeric(genders$Hospitalizations)
+  gb_values_ICU <- as.numeric(genders$ICU)
+  gb_values_deaths <- as.numeric(genders$Deaths)
+
+  gender_pies <- plot_ly()
+  gender_pies <- gender_pies %>%
+    add_pie(data = age_sex, labels = labels, values = values, name = "Total Cases", domain = list(row = 0, column = 0))
+  gender_pies <- gender_pies %>%
+    add_pie(data = genders, labels = labels, values = gb_values_h, name = "Hospitalizations", domain = list(row = 0, column = 1))
+  gender_pies <- gender_pies %>%
+    add_pie(data = genders, labels = labels, values = gb_values_ICU, name = "ICU", domain = list(row = 1, column = 0))
+  gender_pies <- gender_pies %>%
+    add_pie(data = genders, labels = labels, values = gb_values_deaths, name = "Deaths", domain = list(row = 1, column = 1))
+  gender_pies <- gender_pies %>% layout(title = "Gender Breakdown", showlegend = TRUE,
+                            grid=list(rows=2, columns=2),
+                            xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                            yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+
   
   #AGE AND SEX PYRAMID CHART
   age <- rep(c('0-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90-99', '100-'), times = 2)
@@ -169,22 +187,57 @@ server <- function(input, output) {
   growth_rates <- growth_rates %>%
     layout(title = "Growth Rates of Positive Cases and Deaths", xaxis = list(title = "Date"), yaxis = list(title = "Percentage"))
   
-  #RETROACTIVE?
-  
-  #render plots and connect them to drop-down menu choices
+  #Race/Ethnicity Breakdown
+  # labels_r <- ethnicity$Race
+  # r_values_c <- as.numeric(ethnicity$Cases)
+  # r_values_h <- as.numeric(ethnicity$Hospitalizations)
+  # r_values_ICU <- as.numeric(ethnicity$ICU)
+  # r_values_d <- as.numeric(ethnicity$Deaths)
+  # 
+  # pies_r <- plot_ly(data = ethnicity)
+  # pies_r <- pies_r %>%
+  #   add_pie(labels = labels_r, values = r_values_c, name = "Total Cases", domain = list(row = 0, column = 0))
+  # pies_r <- pies_r %>%
+  #   add_pie(labels = labels_r, values = r_values_h, name = "Hospitalizations", domain = list(row = 0, column = 1))
+  # pies_r <- pies_r %>%
+  #   add_pie(labels = labels_r, values = r_values_ICU, name = "ICU", domain = list(row = 1, column = 0))
+  # pies_r <- pies_r %>%
+  #   add_pie(labels = labels_r, values = r_values_d, name = "Deaths", domain = list(row = 1, column = 1))
+  # pies_r <- pies_r %>% layout(title = "Race/Ethnicity Breakdown", showlegend = TRUE,
+  #                           grid=list(rows=2, columns=2),
+  #                           xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+  #                           yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
 
+
+sb_r <- plot_ly(props_e, x = ~Category, y = ~White, type = 'bar', name = "White")
+sb_r <- sb_r %>%
+  add_trace(y = ~African.American, name = "African American")
+sb_r <- sb_r %>%
+  add_trace(y = ~Latinx, name = "Latinx")
+sb_r <- sb_r %>%
+  add_trace(y = ~Asian, name = "Asian")
+sb_r <- sb_r %>%
+  add_trace(y = ~Other, name = "Other")
+sb_r <- sb_r %>%
+  add_trace(y = ~Unknown, name = "Unknown")
+sb_r <- sb_r %>%
+  layout(barmode = 'stack', yaxis = list(title = 'Percentage'), title = "Ethnicity Breakdown by Percentage")
+
+
+#render plots and connect them to drop-down menu choices
   output$plot <- renderPlotly({
     temp <- switch(input$select,
                    "Death and Total Cases" = fa,
                    "Cumulative Cases Semi Log" = semi_log,
                    "Hospitalizations and ICU" = hosp_icu,
                    "Summary Stats" = summary_line, 
-                   "M vs. F Pie Chart" = pie_s,
+                   "Gender Breakdown" = gender_pies,
                    "Age and Sex Breakdown" = df_pyramid, 
                    "Growth Rates" = growth_rates,
                    "Bar Chart of Active Cases" = sb,
                    "Active Cases by Proportions" = csa_active,
-                   "Age Group Breakdown" = donut)
+                   "Age Group Breakdown" = donut,
+                   "Race/Ethnicity Breakdown" = sb_r)
   })
   
   #throw warning only if data is not up to date
