@@ -252,7 +252,7 @@ sb_r <- sb_r %>%
   general_app <- general
   colnames(general_app) <- c("Date", "Total Confirmed Cases", "New Cases", "% Inc Confirmed Cases", "Total Tests Run", "Daily Tests Run", "3-Day Average of Daily Tests",
                              "% Inc Total Tests Run", "Total Positive Cases", "Cummulative Positivity Rate", "Daily Pos. Rate", "Current Hospitalized",
-                             "Total Deaths", "CFR", "% Inc in Deaths", "Currently in ICU", "% Hosp. in ICU", "Active Cases", "Unhosp. Active Cases",
+                             "Total Deaths", "New Deaths", "CFR", "% Inc in Deaths", "Currently in ICU", "% Hosp. in ICU", "Active Cases", "Unhosp. Active Cases",
                              "% of Active Cases Hosp.", "% of Active Cases in ICU", "Active Cases Hosp. (Not in ICU)")
   #reorder data frame from most to least recent
   df <- general_app %>%

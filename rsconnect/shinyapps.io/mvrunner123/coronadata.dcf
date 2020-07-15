@@ -5,6 +5,6 @@ account: mvrunner123
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2118828
-bundleId: 3308218
+bundleId: 3396893
 url: https://mvrunner123.shinyapps.io/coronadata/
-when: 1592943776.36913
+when: 1594844879.80454
